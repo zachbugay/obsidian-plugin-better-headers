@@ -1,5 +1,5 @@
 {
-  "name": "obsidian-better-header-plugin",
+  "name": "obsidian-better-heading-plugin",
   "version": "1.0.0",
   "description": "This is a sample plugin for Obsidian (https://obsidian.md)",
   "main": "main.js",
@@ -7,7 +7,7 @@
   "scripts": {
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mts production",
     "dev": "node esbuild.config.mts",
-    "lint": "eslint .",
+    "lint": "eslint --config eslint.config.mts .",
     "test": "vitest",
     "version": "node version-bump.mjs && git add manifest.json versions.json"
   },

@@ -36,7 +36,7 @@ export default class HelloWorldPlugin extends Plugin {
      */
     this.addCommand({
       id: "bulk-my-add-headings",
-      name: "Bulk My Add Headings",
+      name: "Bulk my add headings.",
       editorCallback(editor: Editor, context: MarkdownView | MarkdownFileInfo) {
         const rawContent: string = editor.getValue();
         const content: string[] = rawContent.split(/\r?\n/);

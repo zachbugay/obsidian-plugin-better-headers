@@ -30,7 +30,7 @@ export const getHeadingPrefix = (mdHeadings: string[]): string[] => {
     const prevMdHeading: string = array[index - 1]!;
     // When the length of the current heading is greater than the length of the previous heading
     // we return a new result, adding the newly formatted heading, which is simply the previous with .1 appended.
-    if (currentMdHeading.length > prevMdHeading!.length) {
+    if (currentMdHeading.length > prevMdHeading.length) {
       const newFormattedHeading = accumulator.headingCounts.get(prevMdHeading) + "1.";
       return produce(accumulator, draftState => {
         draftState.headingCounts.set(currentMdHeading, newFormattedHeading);

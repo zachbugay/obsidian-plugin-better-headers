@@ -1,12 +1,11 @@
-/// <reference types="node" />
-import js from "@eslint/js";
 import obsidianmd from "eslint-plugin-obsidianmd";
 import globals from "globals";
-import tseslint from "typescript-eslint";
 
-import { globalIgnores } from "eslint/config";
+import { defineConfig, globalIgnores } from "eslint/config";
 
-export default tseslint.config(
+export default defineConfig([
+  globalIgnores(["**/node_modules/**", "main.js"]),
+  ...obsidianmd.configs.recommended,
   {
     languageOptions: {
       globals: {
@@ -14,21 +13,24 @@ export default tseslint.config(
       },
       parserOptions: {
         projectService: {
-          allowDefaultProject: ["eslint.config.js", "manifest.json"],
+          allowDefaultProject: ["eslint.config.mts"],
         },
         tsconfigRootDir: import.meta.dirname,
-        extraFileExtensions: [".json"],
       },
     },
   },
-  ...obsidianmd.configs.recommended,
-  globalIgnores([
-    "node_modules",
-    "dist",
-    "esbuild.config.mjs",
-    "eslint.config.js",
-    "version-bump.mjs",
-    "versions.json",
-    "main.js",
-  ]),
-);
+  {
+    files: ["**/*.ts", "**/*.tsx"],
+    rules: {
+      "obsidianmd/rule-custom-message": "warn",
+    },
+  },
+  {
+    files: ["**/*.mjs"],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+    },
+  },
+]);
