@@ -1,75 +1,90 @@
-import {
-  EditorState,
-  StateEffect,
-  StateField,
-  Transaction,
-} from "@codemirror/state";
-import {
-  EditorView, Decoration
-} from "@codemirror/view";
+import { EditorState, StateEffect, StateField, Transaction } from "@codemirror/state";
 import {
   App,
   Editor,
+  EditorPosition,
+  EditorTransaction,
   MarkdownFileInfo,
   MarkdownView,
   Modal,
   Notice,
   Plugin,
-  WorkspaceLeaf,
 } from "obsidian";
-import {
-  DEFAULT_SETTINGS,
-  MyPluginSettings,
-  SampleSettingTab,
-} from "./settings";
+import { DEFAULT_SETTINGS, MyPluginSettings, SampleSettingTab } from "./settings";
+
+import { produce } from "immer";
+import { BetterHeading, HEADING_REGEX } from "./betterHeadings";
+import { getHeadingPrefix } from "./headingCreator";
+import { MyPlugin } from "./myViewPlugin";
 
 // Remember to rename these classes and interfaces!
 export default class HelloWorldPlugin extends Plugin {
   settings: MyPluginSettings = DEFAULT_SETTINGS;
+  private counter = 0;
 
   async onload() {
     await this.loadSettings();
 
-    const view = this.app.workspace.getActiveViewOfType(MarkdownView);
-
-    if (view) {
-      const editor = view.editor;
-      const cursor = editor.getCursor();
-      console.log(cursor);
-      const num = 0;
-    }
-
     this.registerEditorExtension([
-      EditorView.perLineTextDirection.of(true),
-      EditorView.decorations.of(Decoration.set(Decoration.line({attributes: {style: "direction: rtl"}}).range(0))),
+      calculatorField,
+      MyPlugin,
     ]);
 
+    /*
+     * Iterate over every single line. Filter. For any line that matches my regex, I am going to have a total count.
+     * Keep track of the line numbers, as well. Tiered numbers as indexes for hierarchical headings.
+     */
     this.addCommand({
-      id: "add-one",
-      name: "Add One",
-      editorCallback: (editor: Editor, myCtx: MarkdownView | MarkdownFileInfo) => {
-        const selection = editor.getSelection();
-        console.log("FOO BAR");
-        const editorValue = editor.getValue();
-        console.log(editorValue);
-      },
-    });
+      id: "bulk-my-add-headings",
+      name: "Bulk My Add Headings",
+      editorCallback(editor: Editor, context: MarkdownView | MarkdownFileInfo) {
+        const rawContent: string = editor.getValue();
+        const content: string[] = rawContent.split(/\r?\n/);
 
-    this.addCommand({
-      id: "insert-todays-date",
-      name: "Insert Today's Date",
-      editorCallback: (editor: Editor) => {
-        const selection = editor.getSelection();
-        editor.replaceSelection(selection.toUpperCase());
-      },
-    });
+        const headings: Array<BetterHeading> = content.reduce(
+          (accumulator: Array<BetterHeading>, heading: string, index) => {
+            const found: RegExpMatchArray | null = heading.match(HEADING_REGEX);
+            if (found === null || found.groups === undefined) {
+              return accumulator;
+            }
+            const headingContent = found.groups.mdHeading!.trim();
+            const title = found.groups.title!;
+            const result: BetterHeading = {
+              mdHeading: headingContent.trim(),
+              prefix: "",
+              lineIndex: index,
+              title: title.trim(),
+              length: heading.length,
+            };
+            return produce(accumulator, draftValue => {
+              draftValue.push(result);
+            });
+          },
+          new Array<BetterHeading>(),
+        );
 
-    // This adds an editor command that can perform some operation on the current editor instance
-    this.addCommand({
-      id: "replace-selected",
-      name: "Replace selected content",
-      editorCallback: (editor: Editor) => {
-        editor.replaceSelection("Sample editor command");
+        // TODO: Can this be cleaned up? I think so.
+        const headingsOnly = headings.map(heading => heading.mdHeading);
+        const headingResult = getHeadingPrefix(headingsOnly);
+        const headingsWithPrefix: Array<BetterHeading> = headings.map((heading, index) => {
+          return { ...heading, prefix: headingResult[index]! };
+        });
+
+        const tx: EditorTransaction = {
+          changes: headingsWithPrefix.map((heading) => {
+            const newLine: string = `${heading.mdHeading} ${heading.prefix} ${heading.title}`;
+            const lineStart: EditorPosition = { line: heading.lineIndex, ch: 0 };
+            const lineEnd: EditorPosition = { line: heading.lineIndex, ch: heading.length };
+            return {
+              from: lineStart,
+              to: lineEnd,
+              text: newLine,
+            };
+          }),
+        };
+
+        editor.transaction(tx, "better-headings:bulk-heading-apply");
+        new Notice("Applied my heading bulk changes");
       },
     });
 
@@ -79,8 +94,7 @@ export default class HelloWorldPlugin extends Plugin {
       name: "Open modal (complex)",
       checkCallback: (checking: boolean) => {
         // Conditions to check
-        const markdownView =
-          this.app.workspace.getActiveViewOfType(MarkdownView);
+        const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
         if (markdownView) {
           // If checking is true, we're simply "checking" if the command can be run.
           // If checking is false, then we want to actually perform the operation.
@@ -95,13 +109,24 @@ export default class HelloWorldPlugin extends Plugin {
       },
     });
 
+    this.addCommand({
+      id: "add-one",
+      name: "Add one",
+      editorCallback: (editor: Editor, _myCtx: MarkdownView | MarkdownFileInfo) => {
+        this.applyCounterTransaction(editor, 1);
+      },
+    });
+
+    this.addCommand({
+      id: "subtract-one",
+      name: "Subtract one",
+      editorCallback: (editor: Editor, _myCtx: MarkdownView | MarkdownFileInfo) => {
+        this.applyCounterTransaction(editor, -1);
+      },
+    });
+
     // This adds a settings tab so the user can configure various aspects of the plugin
     this.addSettingTab(new SampleSettingTab(this.app, this));
-
-    // When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-    this.registerInterval(
-      window.setInterval(() => console.log("setInterval"), 5 * 60 * 1000),
-    );
   }
 
   onunload() {}
@@ -117,6 +142,25 @@ export default class HelloWorldPlugin extends Plugin {
   async saveSettings() {
     await this.saveData(this.settings);
   }
+
+  private applyCounterTransaction(editor: Editor, delta: number): void {
+    this.counter += delta;
+
+    const from = editor.getCursor("from");
+    const to = editor.getCursor("to");
+    const text = `[counter=${this.counter}]`;
+
+    const tx: EditorTransaction = {
+      changes: [{ from, to, text }],
+      selection: {
+        from,
+        to: { line: from.line, ch: from.ch + text.length },
+      },
+    };
+
+    editor.transaction(tx, "better-heading:counter");
+    new Notice(`Counter is now ${this.counter}`);
+  }
 }
 
 class MyModal extends Modal {
@@ -126,7 +170,7 @@ class MyModal extends Modal {
 
   onOpen() {
     let { contentEl } = this;
-    contentEl.setText("DID YOU RELOAD!");
+    contentEl.setText("Did you reload!");
   }
 
   onClose() {
@@ -140,7 +184,7 @@ const subtractEffect = StateEffect.define<number>();
 const resetEffect = StateEffect.define();
 
 export const calculatorField = StateField.define<number>({
-  create(state: EditorState): number {
+  create(_state: EditorState): number {
     return 0;
   },
   update(oldState: number, transaction: Transaction): number {
@@ -155,6 +199,6 @@ export const calculatorField = StateField.define<number>({
         newState = 0;
       }
     }
-    return 0;
+    return newState;
   },
 });
