@@ -3,7 +3,7 @@
     "inlineSourceMap": true,
     "inlineSources": true,
     "module": "ESNext",
-    "target": "ES2025",
+    "target": "ESNext",
     "allowJs": false,
     "noImplicitAny": true,
     "noImplicitThis": true,
@@ -16,6 +16,6 @@
     "strictBindCallApply": true,
     "allowSyntheticDefaultImports": true,
     "useUnknownInCatchVariables": true,
-    "lib": ["ES2025"]
+    "lib": ["ESNext", "DOM"]
   }
 }

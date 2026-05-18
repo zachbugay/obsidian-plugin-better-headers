@@ -1,8 +1,10 @@
 /// <reference types="node" />
+import js from "@eslint/js";
 import obsidianmd from "eslint-plugin-obsidianmd";
-import { globalIgnores } from "eslint/config";
 import globals from "globals";
 import tseslint from "typescript-eslint";
+
+import { globalIgnores } from "eslint/config";
 
 export default tseslint.config(
   {

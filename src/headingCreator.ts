@@ -19,7 +19,7 @@ export const getHeadingPrefix = (mdHeadings: string[]): string[] => {
   const result: Result = mdHeadings.reduce((accumulator, currentMdHeading, index, array: string[]) => {
     // The very first heading is always "1."
     if (index === 0) {
-      const result: Result = produce(accumulator, draftState => {
+      const result: Result = produce(accumulator, (draftState: Result) => {
         const value = "1.";
         draftState.headingCounts.set(currentMdHeading, value);
         draftState.headings.push(value);
@@ -53,7 +53,7 @@ export const getHeadingPrefix = (mdHeadings: string[]): string[] => {
     const headingParts = previousFormattedHeading.split(".").slice(0, -1);
     // The last heading, converted to a number, and incremented by 1.
     const newHeadingValue = Number(headingParts[headingParts.length - 1]) + 1;
-    return produce(interimAccumulator, draftState => {
+    return produce(interimAccumulator, (draftState: Result) => {
       // An array of values, stripping the last heading value, and adding the new heading value.
       const tmp = headingParts.slice(0, -1);
       tmp.push(`${newHeadingValue}`);
