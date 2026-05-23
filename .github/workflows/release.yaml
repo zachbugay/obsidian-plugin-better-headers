@@ -1,0 +1,11 @@
+name: Release for Better Headings
+
+on:
+  push:
+    tags:
+      - "*"
+  workflow_dispatch:
+
+jobs:
+  call build_and_lint:
+    uses: zachbugay/obsidian-plugin-better-headers/.github/workflows/build_and_lint.yaml@main

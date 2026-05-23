@@ -2,8 +2,7 @@
   "compilerOptions": {
     "inlineSourceMap": true,
     "inlineSources": true,
-    "module": "ESNext",
-    "target": "ESNext",
+    "module": "esnext",
     "allowJs": false,
     "noImplicitAny": true,
     "noImplicitThis": true,
@@ -16,6 +15,6 @@
     "strictBindCallApply": true,
     "allowSyntheticDefaultImports": true,
     "useUnknownInCatchVariables": true,
-    "lib": ["ESNext", "DOM"]
+    "lib": ["es2025", "es2025.iterator", "DOM"]
   }
 }

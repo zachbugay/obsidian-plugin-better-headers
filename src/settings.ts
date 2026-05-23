@@ -1,21 +1,18 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
-import MyPlugin from "./main";
+import BetterHeadingPlugin from "./main";
 
-export interface MyPluginSettings {
-  mySetting: string;
+export interface BetterHeadingSettings {
+  useBetterHeading: boolean;
 }
 
-/**
- * Here you can see the default settings.
- */
-export const DEFAULT_SETTINGS: MyPluginSettings = {
-  mySetting: "default",
+export const DEFAULT_SETTINGS: BetterHeadingSettings = {
+  useBetterHeading: true,
 };
 
-export class SampleSettingTab extends PluginSettingTab {
-  plugin: MyPlugin;
+export class BetterSettingsTab extends PluginSettingTab {
+  plugin: BetterHeadingPlugin;
 
-  constructor(app: App, plugin: MyPlugin) {
+  constructor(app: App, plugin: BetterHeadingPlugin) {
     super(app, plugin);
     this.plugin = plugin;
   }
@@ -26,14 +23,13 @@ export class SampleSettingTab extends PluginSettingTab {
     containerEl.empty();
 
     new Setting(containerEl)
-      .setName("Settings #1")
-      .setDesc("It's a secret")
-      .addText(text =>
-        text
-          .setPlaceholder("Enter your secret")
-          .setValue(this.plugin.settings.mySetting)
-          .onChange(async (value) => {
-            this.plugin.settings.mySetting = value;
+      .setName("Enable better headings.")
+      .setDesc("Enable, or disable the use of the better heading plugin.")
+      .addToggle(component =>
+        component
+          .setValue(this.plugin.settings.useBetterHeading)
+          .onChange(async (_: boolean) => {
+            this.plugin.settings.useBetterHeading = !this.plugin.settings.useBetterHeading;
             await this.plugin.saveSettings();
           })
       );

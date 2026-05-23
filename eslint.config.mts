@@ -3,30 +3,42 @@ import globals from "globals";
 
 import { defineConfig, globalIgnores } from "eslint/config";
 
+import tseslint from "typescript-eslint";
+
 export default defineConfig([
-  globalIgnores(["**/node_modules/**", "main.js"]),
-  ...obsidianmd.configs.recommended,
+  globalIgnores(["**/node_modules/**", "main.js", "**/*.json", "**/.worktrees"]),
+  {
+    files: ["**/*.ts", "**/*.tsx", "**/*.mts"],
+    rules: {
+      "obsidianmd/rule-custom-message": "warn",
+    },
+    extends: [
+      ...obsidianmd.configs.recommended,
+      ...tseslint.configs.recommendedTypeChecked,
+    ],
+  },
   {
     languageOptions: {
       globals: {
         ...globals.browser,
       },
       parserOptions: {
-        projectService: {
-          allowDefaultProject: ["eslint.config.mts"],
-        },
+        projectService: true,
         tsconfigRootDir: import.meta.dirname,
       },
     },
   },
   {
-    files: ["**/*.ts", "**/*.tsx"],
-    rules: {
-      "obsidianmd/rule-custom-message": "warn",
+    files: ["**/*.mjs"],
+    ...tseslint.configs.disableTypeChecked,
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
     },
   },
   {
-    files: ["**/*.mjs"],
+    files: ["eslint.config.mts"],
     languageOptions: {
       globals: {
         ...globals.node,
