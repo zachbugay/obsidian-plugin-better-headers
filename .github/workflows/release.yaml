@@ -8,4 +8,4 @@ on:
 
 jobs:
   call-build-and-lint:
-    uses: zachbugay/obsidian-plugin-better-headers/.github/workflows/build_and_lint.yaml@main
+    uses: ./.github/workflows/build_and_lint.yaml
