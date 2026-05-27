@@ -21,14 +21,6 @@ export const getHeadingPrefix = (
   };
 
   const result: Result = mdHeadings.reduce((accumulator, currentMdHeading, index, array: string[]) => {
-    if (currentMdHeading === "#" && startWithHeadingLevel1 === false) {
-      return produce(accumulator, (draftState: Result) => {
-        const value = "";
-        draftState.headingCounts.set(currentMdHeading, value);
-        draftState.headings.push(value);
-      });
-    }
-
     // The very first heading is always "1."
     if (index === 0) {
       const result: Result = produce(accumulator, (draftState: Result) => {

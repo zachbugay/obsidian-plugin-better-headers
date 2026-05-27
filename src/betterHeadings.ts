@@ -53,6 +53,7 @@ const regenerateState = (doc: Text, state: EditorState): BetterHeading[] => {
   const headings = Iterator.from(doc.iterLines()).reduce((prevState, lineText, index) => {
     const found = lineText.match(HEADING_REGEX);
     if (found === null || found.groups === undefined) return prevState;
+
     const line: Line = doc.line(index + 1);
     const heading: BetterHeading = {
       from: line.from,

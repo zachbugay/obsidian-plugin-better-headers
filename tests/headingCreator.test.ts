@@ -71,7 +71,7 @@ test("An input of ['#', '##', '###', '#', '##', '##'] returns ['1.', '1.1', '1.1
   expect(output).toMatchObject(["1.", "1.1.", "1.1.1.", "2.", "2.1.", "2.2."]);
 });
 
-test("Performance test.... Super large heading...", () => {
+test("Performance test.... Super large header...", () => {
   const target = 100;
   const input: Array<string> = [];
   for (let i = 0; i < target; i++) {
