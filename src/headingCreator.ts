@@ -1,24 +1,34 @@
 import { enableMapSet, produce } from "immer";
-
 enableMapSet();
+
+type Result = {
+  headingCounts: Map<string, string>;
+  headings: string[];
+};
 
 /*
  * Given an array of markdown headings, return a corresponding array of Decimal System Headings.
  * @param mdHeadings: string[]
  * @returns An ordered list of decimal headings.
  */
-export const getHeadingPrefix = (mdHeadings: string[]): string[] => {
-  type Result = {
-    headingCounts: Map<string, string>;
-    headings: string[];
-  };
-
+export const getHeadingPrefix = (
+  mdHeadings: string[],
+  startWithHeadingLevel1: boolean = false,
+): string[] => {
   const initialValue: Result = {
     headingCounts: new Map<string, string>(),
     headings: [],
   };
 
   const result: Result = mdHeadings.reduce((accumulator, currentMdHeading, index, array: string[]) => {
+    if (currentMdHeading === "#" && startWithHeadingLevel1 === false) {
+      return produce(accumulator, (draftState: Result) => {
+        const value = "";
+        draftState.headingCounts.set(currentMdHeading, value);
+        draftState.headings.push(value);
+      });
+    }
+
     // The very first heading is always "1."
     if (index === 0) {
       const result: Result = produce(accumulator, (draftState: Result) => {
@@ -28,6 +38,7 @@ export const getHeadingPrefix = (mdHeadings: string[]): string[] => {
       });
       return result;
     }
+
     // Keep track of the previously processed heading.
     const prevMdHeading: string = array[index - 1]!;
     // When the length of the current heading is greater than the length of the previous heading

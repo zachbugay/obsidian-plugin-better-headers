@@ -1,8 +1,9 @@
-import { ChangeSpec, Transaction } from "@codemirror/state";
+import { ChangeSpec, Compartment, Transaction } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { Editor, MarkdownFileInfo, MarkdownView, Notice, Plugin } from "obsidian";
 import {
   atomicPrefixRanges,
+  betterHeadingSettingsFacet,
   betterHeadingState,
   generateChanges,
   headingUpdateListener,
@@ -14,10 +15,13 @@ import { BetterHeadingSettings, BetterSettingsTab, DEFAULT_SETTINGS } from "./se
 export default class BetterHeadingPlugin extends Plugin {
   settings: BetterHeadingSettings = DEFAULT_SETTINGS;
 
+  private regexCompartment = new Compartment();
+
   async onload() {
     await this.loadSettings();
 
     this.registerEditorExtension([
+      this.regexCompartment.of(betterHeadingSettingsFacet.of(this.settings)),
       betterHeadingState,
       headingUpdateListener,
       atomicPrefixRanges,
@@ -44,21 +48,31 @@ export default class BetterHeadingPlugin extends Plugin {
       },
     });
 
-    // This adds a settings tab so the user can configure various aspects of the plugin
     this.addSettingTab(new BetterSettingsTab(this.app, this));
   }
 
   onunload() {}
 
   async loadSettings() {
-    this.settings = Object.assign(
-      {},
-      DEFAULT_SETTINGS,
-      (await this.loadData()) as Partial<BetterHeadingSettings>,
-    );
+    const savedSettings = await this.loadData() as Partial<BetterHeadingSettings>;
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, savedSettings);
   }
 
   async saveSettings() {
     await this.saveData(this.settings);
+  }
+
+  reconfigureSettings() {
+    this.app.workspace.iterateAllLeaves((leaf) => {
+      if (leaf.view instanceof MarkdownView) {
+        // @ts-expect-error, not typed
+        const cm: EditorView = leaf.view.editor.cm as EditorView;
+        cm.dispatch({
+          effects: this.regexCompartment.reconfigure(
+            betterHeadingSettingsFacet.of(this.settings),
+          ),
+        });
+      }
+    });
   }
 }

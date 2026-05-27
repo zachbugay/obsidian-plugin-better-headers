@@ -1,12 +1,16 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
 import BetterHeadingPlugin from "./main";
 
+export const HEADING_REGEX: RegExp = /^(?<mdHeading>#+)\s+(?:(?<prefix>(?:\d+\.)+)\s+)?(?<title>.*$)/;
+
 export interface BetterHeadingSettings {
   useBetterHeading: boolean;
+  startWithHeadingLevel1: boolean;
 }
 
 export const DEFAULT_SETTINGS: BetterHeadingSettings = {
   useBetterHeading: true,
+  startWithHeadingLevel1: false,
 };
 
 export class BetterSettingsTab extends PluginSettingTab {
@@ -31,6 +35,19 @@ export class BetterSettingsTab extends PluginSettingTab {
           .onChange(async (_: boolean) => {
             this.plugin.settings.useBetterHeading = !this.plugin.settings.useBetterHeading;
             await this.plugin.saveSettings();
+            this.plugin.reconfigureSettings();
+          })
+      );
+
+    new Setting(containerEl)
+      .setName("Start heading with level 1")
+      .setDesc("Whether or not to use heading level 1 (#) as a start for your headings.")
+      .addToggle(component =>
+        component.setValue(this.plugin.settings.startWithHeadingLevel1)
+          .onChange(async (value: boolean) => {
+            this.plugin.settings.startWithHeadingLevel1 = value;
+            await this.plugin.saveSettings();
+            this.plugin.reconfigureSettings();
           })
       );
   }

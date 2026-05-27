@@ -2,6 +2,7 @@ import {
   Annotation,
   ChangeSpec,
   EditorState,
+  Facet,
   Line,
   Range,
   RangeSet,
@@ -12,8 +13,7 @@ import {
 import { Decoration, DecorationSet, EditorView, ViewPlugin, ViewUpdate } from "@codemirror/view";
 import { produce } from "immer";
 import { getHeadingPrefix } from "./headingCreator";
-
-export const HEADING_REGEX: RegExp = /^(?<mdHeading>#+)\s+(?:(?<prefix>(?:\d+\.)+)\s+)?(?<title>.*$)/;
+import { BetterHeadingSettings, DEFAULT_SETTINGS, HEADING_REGEX } from "./settings";
 
 export type BetterHeading = {
   from: number;
@@ -26,23 +26,33 @@ export type BetterHeading = {
 };
 
 export const isBetterHeadingUpdate = Annotation.define<boolean>();
+
 export const betterHeadingState = StateField.define<BetterHeading[]>({
   create(state: EditorState) {
-    return regenerateState(state.doc);
+    return regenerateState(state.doc, state);
   },
   update(value: BetterHeading[], transaction: Transaction) {
     const doc = transaction.newDoc;
-    return regenerateState(doc);
+    return regenerateState(doc, transaction.startState);
   },
 });
 
-const regenerateState = (doc: Text): BetterHeading[] => {
-  const initialState: BetterHeading[] = [];
+export const betterHeadingSettingsFacet: Facet<BetterHeadingSettings, BetterHeadingSettings> = Facet.define<
+  BetterHeadingSettings,
+  BetterHeadingSettings
+>({
+  combine(values: readonly BetterHeadingSettings[]) {
+    return values[0] ?? DEFAULT_SETTINGS;
+  },
+});
 
+const regenerateState = (doc: Text, state: EditorState): BetterHeading[] => {
+  const settings = state.facet(betterHeadingSettingsFacet);
+  if (!settings.useBetterHeading) return [];
+  const initialState: BetterHeading[] = [];
   const headings = Iterator.from(doc.iterLines()).reduce((prevState, lineText, index) => {
     const found = lineText.match(HEADING_REGEX);
     if (found === null || found.groups === undefined) return prevState;
-
     const line: Line = doc.line(index + 1);
     const heading: BetterHeading = {
       from: line.from,
