@@ -15,8 +15,10 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Checkout repository code
-        uses: actions/checkout@v6
+      - name: Download build artifacts
+        uses: actions/download-artifact@v8
+        with:
+          name: build-output
       - name: Create release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

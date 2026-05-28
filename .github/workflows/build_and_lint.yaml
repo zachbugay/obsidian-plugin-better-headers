@@ -19,9 +19,17 @@ jobs:
         uses: actions/checkout@v6
       - name: Install pnpm
         uses: pnpm/action-setup@v6
-      - name: "Install dependencies."
+      - name: Install dependencies.
         run: pnpm install
-      - name: "Build"
+      - name: Build
         run: pnpm run build --if-present
-      - name: "Lint"
+      - name: Lint
         run: pnpm run lint
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: build-output
+          path: |
+            main.js
+            manifest.json
+            styles.css
