@@ -49,11 +49,10 @@ export const betterHeadingSettingsFacet: Facet<BetterHeadingSettings, BetterHead
 const regenerateState = (doc: Text, state: EditorState): BetterHeading[] => {
   const settings = state.facet(betterHeadingSettingsFacet);
   if (!settings.useBetterHeading) return [];
-  const initialState: BetterHeading[] = [];
-  const headings = Iterator.from(doc.iterLines()).reduce((prevState, lineText, index) => {
-    const found = lineText.match(HEADING_REGEX);
-    if (found === null || found.groups === undefined) return prevState;
-
+  const headings = Iterator.from(doc.iterLines()).reduce((accumulator, lineText, index) => {
+    const found: RegExpMatchArray | null = lineText.match(HEADING_REGEX);
+    if (found === null || found.groups === undefined) return accumulator;
+    if (!settings.startWithHeadingLevel1 && index === 0 && found.groups.mdHeading === "#") return accumulator;
     const line: Line = doc.line(index + 1);
     const heading: BetterHeading = {
       from: line.from,
@@ -65,17 +64,21 @@ const regenerateState = (doc: Text, state: EditorState): BetterHeading[] => {
       result: "",
     };
 
-    return produce(prevState, (draftState) => {
+    return produce(accumulator, (draftState) => {
       draftState.push(heading);
     });
-  }, initialState);
+  }, [] as BetterHeading[]);
 
-  const mdHeadings = headings.map(h => h.mdHeading);
-  const prefixes = getHeadingPrefix(mdHeadings);
+  const mdHeadings: string[] = headings.reduce((accumulator, currentValue, index) => {
+    accumulator.push(currentValue.mdHeading);
+    return accumulator;
+  }, [] as string[]);
+
+  const prefixes: string[] = getHeadingPrefix(mdHeadings);
 
   return headings.map((heading, index) => {
-    const prefix = prefixes[index]!;
-    const result = `${heading.mdHeading} ${prefix} ${heading.title}`;
+    const prefix: string = prefixes[index]!;
+    const result: string = `${heading.mdHeading} ${prefix} ${heading.title}`;
     return { ...heading, prefix, result };
   });
 };
