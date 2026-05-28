@@ -13,7 +13,6 @@ type Result = {
  */
 export const getHeadingPrefix = (
   mdHeadings: string[],
-  startWithHeadingLevel1: boolean = false,
 ): string[] => {
   const initialValue: Result = {
     headingCounts: new Map<string, string>(),

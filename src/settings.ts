@@ -32,8 +32,8 @@ export class BetterSettingsTab extends PluginSettingTab {
       .addToggle(component =>
         component
           .setValue(this.plugin.settings.useBetterHeading)
-          .onChange(async (_: boolean) => {
-            this.plugin.settings.useBetterHeading = !this.plugin.settings.useBetterHeading;
+          .onChange(async (value: boolean) => {
+            this.plugin.settings.useBetterHeading = value;
             await this.plugin.saveSettings();
             this.plugin.reconfigureSettings();
           })
