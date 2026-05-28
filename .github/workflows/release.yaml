@@ -11,6 +11,7 @@ jobs:
     uses: ./.github/workflows/build_and_lint.yaml
   create-release:
     runs-on: ubuntu-latest
+    needs: call-build-lint
     permissions:
       contents: write
     steps:
@@ -24,4 +25,3 @@ jobs:
             --title="$tag" \
             --draft \
             main.js mainifest.json styles.css
-        needs: call-build-lint
