@@ -4,8 +4,8 @@
   "version": "1.0.0",
   "minAppVersion": "1.7.2",
   "description": "Automatically prefix headings with a decimal system.",
-  "author": "Zach Bugay",
-  "authorUrl": "https://www.zachbugay.com",
-  "fundingUrl": "https://ko-fi.com/zachbugay",
+  "author": "zachbugay",
+  "authorUrl": "https://zachbugay.com",
+  "fundingUrl": "https://buymeacoffee.com/zachbugay",
   "isDesktopOnly": false
 }
