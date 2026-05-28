@@ -40,8 +40,10 @@ export class BetterSettingsTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Start heading with level 1")
-      .setDesc("Whether or not to use heading level 1 (#) as a start for your headings.")
+      .setName("Start heading count at heading 1")
+      .setDesc(
+        "Whether or not to use heading level 1 (#) as a start for your headings. (It is recommended to keep this set to false.)",
+      )
       .addToggle(component =>
         component.setValue(this.plugin.settings.startWithHeadingLevel1)
           .onChange(async (value: boolean) => {
