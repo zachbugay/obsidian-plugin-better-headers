@@ -13,7 +13,12 @@ import {
 import { Decoration, DecorationSet, EditorView, ViewPlugin, ViewUpdate } from "@codemirror/view";
 import { produce } from "immer";
 import { getHeadingPrefix } from "./headingCreator";
-import { BetterHeadingSettings, DEFAULT_SETTINGS, HEADING_REGEX } from "./settings";
+import {
+  BetterHeadingSettings,
+  CODE_BLOCK_REGEX as CODE_BLOCK_REGEX,
+  DEFAULT_SETTINGS,
+  HEADING_REGEX,
+} from "./settings";
 
 export type BetterHeading = {
   from: number;
@@ -49,13 +54,49 @@ export const betterHeadingSettingsFacet: Facet<BetterHeadingSettings, BetterHead
 
 const regenerateState = (doc: Text, state: EditorState): BetterHeading[] => {
   const settings: BetterHeadingSettings = state.facet(betterHeadingSettingsFacet);
+
   if (!settings.useBetterHeading) return [];
-  const headings: BetterHeading[] = Iterator.from(doc.iterLines()).reduce((accumulator, lineText, index) => {
+  let inCodeBlock = false;
+
+  type RowMetaData = {
+    inCodeBlock: boolean;
+    codeBlockLineIndex: number;
+    heading: BetterHeading;
+  };
+
+  const headings: RowMetaData[] = Iterator.from(doc.iterLines()).reduce((accumulator, lineText, index) => {
+    const codeBlockFound: RegExpMatchArray | null = lineText.match(CODE_BLOCK_REGEX);
+
+    if (codeBlockFound !== null) {
+      inCodeBlock = !inCodeBlock;
+    }
+    if (inCodeBlock) {
+      const result = produce(accumulator, (draftState) => {
+        draftState.push(
+          {
+            inCodeBlock: inCodeBlock,
+            codeBlockLineIndex: index,
+            heading: {
+              from: 0,
+              to: 0,
+              lineIndex: index,
+              mdHeading: "",
+              prefix: "",
+              title: "",
+              result: "",
+            },
+          },
+        );
+      });
+      return result;
+    }
+
     const found: RegExpMatchArray | null = lineText.match(HEADING_REGEX);
     if (found === null || found.groups === undefined) return accumulator;
     if (!settings.startWithHeadingLevel1 && accumulator.length === 0 && found.groups.mdHeading === "#") {
       return accumulator;
     }
+
     const line: Line = doc.line(index + 1);
     const heading: BetterHeading = {
       from: line.from,
@@ -68,16 +109,18 @@ const regenerateState = (doc: Text, state: EditorState): BetterHeading[] => {
     };
 
     return produce(accumulator, (draftState) => {
-      draftState.push(heading);
+      draftState.push({ inCodeBlock: false, codeBlockLineIndex: index, heading: heading });
     });
-  }, [] as BetterHeading[]);
-  const mdHeadings: string[] = headings.map(h => h.mdHeading);
+  }, [] as RowMetaData[]);
+
+  const mdHeadings: string[] = headings.filter(h => h.inCodeBlock === false).map(h => h.heading.mdHeading);
+
   const prefixes: string[] = getHeadingPrefix(mdHeadings);
 
-  return headings.map((heading, index) => {
+  return headings.filter(h => h.inCodeBlock === false).map((heading, index) => {
     const prefix: string = prefixes[index]!;
-    const result: string = `${heading.mdHeading} ${prefix} ${heading.title}`;
-    return { ...heading, prefix, result };
+    const result: string = `${heading.heading.mdHeading} ${prefix} ${heading.heading.title}`;
+    return { ...heading.heading, prefix, result };
   });
 };
 

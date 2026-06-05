@@ -7,7 +7,7 @@ type Result = {
 };
 
 /*
- * Given an array of markdown headings, return a corresponding array of Decimal System Headings.
+ * Given an array of Markdown headings, return a corresponding array of Decimal System Headings.
  * @param mdHeadings: string[]
  * @returns An ordered list of decimal headings.
  */
@@ -33,7 +33,7 @@ export const getHeadingPrefix = (
     // Keep track of the previously processed heading.
     const prevMdHeading: string = array[index - 1]!;
     // When the length of the current heading is greater than the length of the previous heading
-    // we return a new result, adding the newly formatted heading, which is simply the previous with .1 appended.
+    // we return a new result, adding the newly formatted heading, which is simply the previous with '.1' appended.
     if (currentMdHeading.length > prevMdHeading.length) {
       const newFormattedHeading = accumulator.headingCounts.get(prevMdHeading) + "1.";
       return produce(accumulator, draftState => {
@@ -53,6 +53,7 @@ export const getHeadingPrefix = (
     }, accumulator);
 
     const previousFormattedHeading = interimAccumulator.headingCounts.get(currentMdHeading);
+
     // An array of values, without the trailing "".
     const headingParts = previousFormattedHeading === undefined
       ? []
@@ -75,6 +76,5 @@ export const getHeadingPrefix = (
     });
   }, initialValue);
 
-  // Simply return the headings string.
   return result.headings;
 };

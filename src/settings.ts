@@ -2,6 +2,7 @@ import { App, PluginSettingTab, Setting } from "obsidian";
 import BetterHeadingPlugin from "./main";
 
 export const HEADING_REGEX: RegExp = /^(?<mdHeading>#+)\s+(?:(?<prefix>(?:\d+\.)+)\s+)?(?<title>.*$)/;
+export const CODE_BLOCK_REGEX: RegExp = /^```.*$/;
 
 export interface BetterHeadingSettings {
   useBetterHeading: boolean;
@@ -27,8 +28,8 @@ export class BetterSettingsTab extends PluginSettingTab {
     containerEl.empty();
 
     new Setting(containerEl)
-      .setName("Enable better headings.")
-      .setDesc("Enable, or disable the use of the better heading plugin.")
+      .setName("Enable better headings")
+      .setDesc("Enable, or disable the use of the better heading plugin")
       .addToggle(component =>
         component
           .setValue(this.plugin.settings.useBetterHeading)
@@ -42,7 +43,7 @@ export class BetterSettingsTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName("Start heading count at heading 1")
       .setDesc(
-        "Whether or not to use heading level 1 (#) as a start for your headings. (It is recommended to keep this set to false.)",
+        "Whether or not to use heading level 1 (#) as a start for your headings. (It is recommended to keep this set to false)",
       )
       .addToggle(component =>
         component.setValue(this.plugin.settings.startWithHeadingLevel1)
