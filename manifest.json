@@ -1,7 +1,7 @@
 {
   "id": "better-headings",
   "name": "Better Headings",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "minAppVersion": "1.7.2",
   "description": "Automatically prefix headings with a decimal system.",
   "author": "zachbugay",
