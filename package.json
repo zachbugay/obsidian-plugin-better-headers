@@ -1,6 +1,6 @@
 {
   "name": "better-headings",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "An obsidian plugin that makes using headings more pleasant.",
   "main": "main.js",
   "type": "module",
