@@ -11,7 +11,6 @@ export default defineConfig([
     "main.js",
     "**/*.json",
     "**/.worktrees",
-    "types/**",
   ]),
   {
     files: ["**/*.ts", "**/*.tsx", "**/*.mts"],
@@ -29,7 +28,7 @@ export default defineConfig([
         ...globals.browser,
       },
       parserOptions: {
-        project: ["./tsconfig.lint.json"],
+        projectService: true,
         tsconfigRootDir: import.meta.dirname,
       },
     },
