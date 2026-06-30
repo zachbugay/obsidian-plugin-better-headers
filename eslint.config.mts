@@ -6,7 +6,13 @@ import { defineConfig, globalIgnores } from "eslint/config";
 import tseslint from "typescript-eslint";
 
 export default defineConfig([
-  globalIgnores(["**/node_modules/**", "main.js", "**/*.json", "**/.worktrees"]),
+  globalIgnores([
+    "**/node_modules/**",
+    "main.js",
+    "**/*.json",
+    "**/.worktrees",
+    "types/**",
+  ]),
   {
     files: ["**/*.ts", "**/*.tsx", "**/*.mts"],
     rules: {
@@ -23,7 +29,7 @@ export default defineConfig([
         ...globals.browser,
       },
       parserOptions: {
-        projectService: true,
+        project: ["./tsconfig.lint.json"],
         tsconfigRootDir: import.meta.dirname,
       },
     },

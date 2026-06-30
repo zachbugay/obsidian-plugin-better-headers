@@ -1,4 +1,5 @@
-import { enableMapSet, produce } from "immer";
+import { enableMapSet, produce } from "./immerCompat";
+
 enableMapSet();
 
 type Result = {
@@ -11,70 +12,75 @@ type Result = {
  * @param mdHeadings: string[]
  * @returns An ordered list of decimal headings.
  */
-export const getHeadingPrefix = (
-  mdHeadings: string[],
-): string[] => {
+export const getHeadingPrefix = (mdHeadings: string[]): string[] => {
   const initialValue: Result = {
     headingCounts: new Map<string, string>(),
     headings: [],
   };
 
-  const result: Result = mdHeadings.reduce((accumulator, currentMdHeading, index, array: string[]) => {
-    // The very first heading is always "1."
-    if (index === 0) {
-      const result: Result = produce(accumulator, (draftState: Result) => {
-        const value = "1.";
-        draftState.headingCounts.set(currentMdHeading, value);
-        draftState.headings.push(value);
-      });
-      return result;
-    }
+  const result: Result = mdHeadings.reduce(
+    (accumulator, currentMdHeading, index, array: string[]) => {
+      // The very first heading is always "1."
+      if (index === 0) {
+        const result: Result = produce(accumulator, (draftState: Result) => {
+          const value = "1.";
+          draftState.headingCounts.set(currentMdHeading, value);
+          draftState.headings.push(value);
+        });
+        return result;
+      }
 
-    // Keep track of the previously processed heading.
-    const prevMdHeading: string = array[index - 1]!;
-    // When the length of the current heading is greater than the length of the previous heading
-    // we return a new result, adding the newly formatted heading, which is simply the previous with '.1' appended.
-    if (currentMdHeading.length > prevMdHeading.length) {
-      const newFormattedHeading = accumulator.headingCounts.get(prevMdHeading) + "1.";
-      return produce(accumulator, draftState => {
-        draftState.headingCounts.set(currentMdHeading, newFormattedHeading);
-        draftState.headings.push(newFormattedHeading);
-      });
-    }
-
-    // We need to remove all headings from the map that are greater than the length of the current heading.
-    const interimAccumulator = [...accumulator.headingCounts.keys()].reduceRight((accumulator, lastMdHeading) => {
-      if (lastMdHeading.length > currentMdHeading.length) {
-        return produce(accumulator, draftState => {
-          draftState.headingCounts.delete(lastMdHeading);
+      // Keep track of the previously processed heading.
+      const prevMdHeading: string = array[index - 1]!;
+      // When the length of the current heading is greater than the length of the previous heading
+      // we return a new result, adding the newly formatted heading, which is simply the previous with '.1' appended.
+      if (currentMdHeading.length > prevMdHeading.length) {
+        const newFormattedHeading =
+          accumulator.headingCounts.get(prevMdHeading) + "1.";
+        return produce(accumulator, (draftState) => {
+          draftState.headingCounts.set(currentMdHeading, newFormattedHeading);
+          draftState.headings.push(newFormattedHeading);
         });
       }
-      return accumulator;
-    }, accumulator);
 
-    const previousFormattedHeading = interimAccumulator.headingCounts.get(currentMdHeading);
+      // We need to remove all headings from the map that are greater than the length of the current heading.
+      const interimAccumulator = [
+        ...accumulator.headingCounts.keys(),
+      ].reduceRight((accumulator, lastMdHeading) => {
+        if (lastMdHeading.length > currentMdHeading.length) {
+          return produce(accumulator, (draftState) => {
+            draftState.headingCounts.delete(lastMdHeading);
+          });
+        }
+        return accumulator;
+      }, accumulator);
 
-    // An array of values, without the trailing "".
-    const headingParts = previousFormattedHeading === undefined
-      ? []
-      : previousFormattedHeading?.split(".").slice(0, -1);
+      const previousFormattedHeading =
+        interimAccumulator.headingCounts.get(currentMdHeading);
 
-    // The last heading, converted to a number, and incremented by 1.
-    const newHeadingValue = headingParts.length === 0
-      ? ""
-      : Number(headingParts[headingParts.length - 1]) + 1;
+      // An array of values, without the trailing "".
+      const headingParts =
+        previousFormattedHeading === undefined
+          ? []
+          : previousFormattedHeading?.split(".").slice(0, -1);
 
-    return produce(interimAccumulator, (draftState: Result) => {
-      // An array of values, stripping the last heading value, and adding the new heading value.
-      const tmp = headingParts.slice(0, -1);
-      tmp.push(`${newHeadingValue}`);
-      const final: string = newHeadingValue === ""
-        ? ""
-        : `${tmp.join(".")}.`; // Create a final string, joining all values with a ".".
-      draftState.headings.push(final);
-      draftState.headingCounts.set(currentMdHeading, final);
-    });
-  }, initialValue);
+      // The last heading, converted to a number, and incremented by 1.
+      const newHeadingValue =
+        headingParts.length === 0
+          ? ""
+          : Number(headingParts[headingParts.length - 1]) + 1;
+
+      return produce(interimAccumulator, (draftState: Result) => {
+        // An array of values, stripping the last heading value, and adding the new heading value.
+        const tmp = headingParts.slice(0, -1);
+        tmp.push(`${newHeadingValue}`);
+        const final: string = newHeadingValue === "" ? "" : `${tmp.join(".")}.`; // Create a final string, joining all values with a ".".
+        draftState.headings.push(final);
+        draftState.headingCounts.set(currentMdHeading, final);
+      });
+    },
+    initialValue,
+  );
 
   return result.headings;
 };
